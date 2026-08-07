@@ -6,6 +6,7 @@
 //
 #include "ui/widgets/popup_menu.h"
 
+#include "ayu/features/streamer_mode/streamer_mode.h"
 #include "base/platform/base_platform_info.h"
 #include "base/invoke_queued.h"
 #include "ui/image/image_prepare.h"
@@ -1003,6 +1004,9 @@ void PopupMenu::showPrepared(TriggeredSource source) {
 		ForceFullRepaintSync(this);
 	}
 	show();
+	if (AyuFeatures::StreamerMode::isEnabled()) {
+		AyuFeatures::StreamerMode::hideWidgetWindow(this);
+	}
 	Platform::ShowOverAll(this);
 	raise();
 	activateWindow();
