@@ -348,6 +348,7 @@ target_include_directories(lib_ui
 PUBLIC
     ${src_loc}
     ${src_loc}/emoji_suggestions
+    ${src_loc}/../SourceFiles
 )
 
 target_link_libraries(lib_ui
