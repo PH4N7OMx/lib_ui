@@ -9,6 +9,7 @@
 #include "ayu/features/streamer_mode/streamer_mode.h"
 #include "base/platform/base_platform_info.h"
 #include "base/invoke_queued.h"
+#include "base/weak_qptr.h"
 #include "ui/image/image_prepare.h"
 #include "ui/platform/ui_platform_utility.h"
 #include "ui/widgets/shadow.h"
@@ -95,7 +96,7 @@ PopupMenu::PopupMenu(QWidget *parent, QMenu *menu, const style::PopupMenu &st)
 		if (const auto submenu = action->menu()) {
 			_submenus.emplace(
 				action,
-				base::make_unique_q<PopupMenu>(parentWidget(), submenu, st)
+				base::make_unique_q<PopupMenu>(this, submenu, st)
 			).first->second->deleteOnHide(false);
 		}
 	}
@@ -152,7 +153,7 @@ not_null<PopupMenu*> PopupMenu::ensureSubmenu(
 	}
 	const auto result = _submenus.emplace(
 		action,
-		base::make_unique_q<PopupMenu>(parentWidget(), st)
+		base::make_unique_q<PopupMenu>(this, st)
 	).first->second.get();
 	result->deleteOnHide(false);
 	return result;
@@ -284,13 +285,14 @@ not_null<QAction*> PopupMenu::addAction(
 		action,
 		base::unique_qptr<PopupMenu>(submenu.release())
 	).first->second.get();
-	// Reparent under our own parent (like ensureSubmenu and the QMenu
-	// constructor do), but keep the window flags: the single-argument
+	// Reparent under the menu itself (like ensureSubmenu and the QMenu
+	// constructor do), so the submenu window gets this menu's window as
+	// its transient parent, but keep the window flags: the single-argument
 	// QWidget::setParent() resets them, which strips the Qt::Popup type set
 	// in init() and demotes the submenu to a plain child widget. Such a widget
 	// has no windowHandle() after createWinId(), so prepareGeometryFor() can't
 	// show it.
-	saved->setParent(parentWidget(), saved->windowFlags());
+	saved->setParent(this, saved->windowFlags());
 	saved->deleteOnHide(false);
 	return action;
 }
@@ -543,7 +545,13 @@ void PopupMenu::popupSubmenu(
 				geometry().topLeft() + p,
 				this,
 				_menu->itemForAction(action))) {
+			// showPrepared() reaches the platform window, deep enough for
+			// the owner to destroy us from inside it.
+			const auto weak = base::make_weak(this);
 			_activeSubmenu->showPrepared(source);
+			if (!weak) {
+				return;
+			}
 			_menu->setChildShownAction(action);
 			const auto aim = submenuAim();
 			aim->action = action;
@@ -819,9 +827,13 @@ void PopupMenu::startOpacityAnimation(bool hiding) {
 
 void PopupMenu::showStarted() {
 	if (isHidden()) {
+		// Same as in showPrepared(): show() can end with this menu gone.
+		const auto weak = base::make_weak(this);
 		show();
-		startShowAnimation();
-		Integration::Instance().preparePopupMenu(this);
+		if (weak) {
+			startShowAnimation();
+			Integration::Instance().preparePopupMenu(this);
+		}
 		return;
 	} else if (!_hiding) {
 		return;
@@ -899,7 +911,12 @@ QImage PopupMenu::grabForPanelAnimation() {
 		p.fillRect(_inner, _st.menu.itemBg);
 		for (const auto child : children()) {
 			if (const auto widget = qobject_cast<QWidget*>(child)) {
-				RenderWidget(p, widget, widget->pos());
+				// Submenus are windows of their own, they are not a part
+				// of what this menu paints, and their pos() is meaningless
+				// in our coordinates.
+				if (!widget->isWindow()) {
+					RenderWidget(p, widget, widget->pos());
+				}
 			}
 		}
 		_grabbingForPanelAnimation = false;
@@ -1144,7 +1161,11 @@ void PopupMenu::showPrepared(TriggeredSource source) {
 		ForceFullRepaintSync(this);
 	}
 	Integration::Instance().preparePopupMenu(this);
+	const auto weak = base::make_weak(this);
 	show();
+	if (!weak) {
+		return;
+	}
 	if (AyuFeatures::StreamerMode::isEnabled()) {
 		AyuFeatures::StreamerMode::hideWidgetWindow(this);
 	}
