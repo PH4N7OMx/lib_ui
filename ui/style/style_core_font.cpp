@@ -22,8 +22,8 @@
 #endif // __has_include(<glib.h>)
 
 
-// AyuGram includes
-#include "ayu/ayu_ui_settings.h"
+// GummyGram includes
+#include "jel/jel_ui_settings.h"
 
 
 void style_InitFontsResource() {
@@ -152,7 +152,7 @@ bool LoadCustomFont(const QString &filePath) {
 }
 
 [[nodiscard]] QString ManualMonospaceFont() {
-	const auto monoFont = AyuUiSettings::getMonoFont().isEmpty() ? "Cascadia Mono"_q : AyuUiSettings::getMonoFont();
+	const auto monoFont = JelUiSettings::getMonoFont().isEmpty() ? "Cascadia Mono"_q : JelUiSettings::getMonoFont();
 	const auto kTryFirst = std::initializer_list<QString>{
 		monoFont,
 		u"Cascadia Mono"_q,

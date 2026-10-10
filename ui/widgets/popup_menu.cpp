@@ -6,7 +6,7 @@
 //
 #include "ui/widgets/popup_menu.h"
 
-#include "ayu/features/streamer_mode/streamer_mode.h"
+#include "jel/features/streamer_mode/streamer_mode.h"
 #include "base/platform/base_platform_info.h"
 #include "base/invoke_queued.h"
 #include "base/weak_qptr.h"
@@ -1149,8 +1149,8 @@ void PopupMenu::showPrepared(TriggeredSource source) {
 	if (!weak) {
 		return;
 	}
-	if (AyuFeatures::StreamerMode::isEnabled()) {
-		AyuFeatures::StreamerMode::hideWidgetWindow(this);
+	if (JelFeatures::StreamerMode::isEnabled()) {
+		JelFeatures::StreamerMode::hideWidgetWindow(this);
 	}
 	Platform::ShowOverAll(this);
 	raise();

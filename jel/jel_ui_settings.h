@@ -6,7 +6,7 @@
 // Copyright @Radolyn, 2026
 #pragma once
 
-namespace AyuUiSettings {
+namespace JelUiSettings {
 
 inline constexpr int kMaxAvatarCorners = 23;
 
