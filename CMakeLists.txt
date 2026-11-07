@@ -279,6 +279,7 @@ PRIVATE
     ui/widgets/separate_panel.h
     ui/widgets/scroll_area.cpp
     ui/widgets/scroll_area.h
+    ui/widgets/scroll_math.h
     ui/widgets/side_bar_button.cpp
     ui/widgets/side_bar_button.h
     ui/widgets/shadow.cpp
@@ -371,8 +372,12 @@ if (DESKTOP_APP_USE_PANGO)
         ui/text/text_stack_engine.cpp
         ui/text/text_stack_engine.h
     )
-    target_compile_definitions(lib_ui PRIVATE LIB_UI_USE_PANGO)
-    target_link_libraries(lib_ui PRIVATE desktop-app::external_pango)
+    target_link_libraries(lib_ui PRIVATE $<LINK_ONLY:desktop-app::external_pango>)
+    set_source_files_properties(${src_loc}/ui/text/text_shaper_pango.cpp
+    PROPERTIES
+        INCLUDE_DIRECTORIES "$<TARGET_PROPERTY:desktop-app::external_pango,INTERFACE_INCLUDE_DIRECTORIES>"
+        COMPILE_OPTIONS "$<TARGET_PROPERTY:desktop-app::external_pango,INTERFACE_COMPILE_OPTIONS>"
+    )
 else()
     remove_target_sources(lib_ui ${src_loc}
         ui/platform/linux/ui_font_settings_linux.cpp
