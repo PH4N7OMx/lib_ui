@@ -48,6 +48,7 @@ public:
 	virtual ~AbstractCheckView() = default;
 
 private:
+	virtual bool isToggle() const { return false; }
 	virtual void checkedChangedHook(anim::type animated) {
 	}
 
@@ -156,6 +157,7 @@ public:
 	void setLocked(bool locked);
 
 private:
+	bool isToggle() const override { return true; }
 	void paintXV(QPainter &p, int left, int top, int outerWidth, float64 toggled, const QBrush &brush);
 	QSize rippleSize() const;
 

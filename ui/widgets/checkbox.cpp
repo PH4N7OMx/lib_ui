@@ -70,12 +70,13 @@ void AbstractCheckView::setChecked(bool checked, anim::type animated) {
 			_updateCallback();
 		}
 	} else if (changed) {
+		const auto macos = MacosSwitches && isToggle();
 		_toggleAnimation.start(
 			[=] { if (_updateCallback) _updateCallback(); },
 			_checked ? 0. : 1.,
 			_checked ? 1. : 0.,
-			MacosSwitches ? 988 : JelUiSettings::isMaterialSwitches() ? _duration : st::defaultToggleDuration,
-			MacosSwitches ? anim::transition(MacosSwitchSpring) : JelUiSettings::isMaterialSwitches() ? anim::easeOutCubic : anim::linear);
+			macos ? 988 : JelUiSettings::isMaterialSwitches() ? _duration : st::defaultToggleDuration,
+			macos ? anim::transition(MacosSwitchSpring) : JelUiSettings::isMaterialSwitches() ? anim::easeOutCubic : anim::linear);
 	}
 	checkedChangedHook(animated);
 	if (changed) {
