@@ -161,6 +161,7 @@ private:
 	struct SubmenuAim;
 
 	void paintBg(QPainter &p);
+	void prepareBackdrop();
 	void hideFast();
 	void setOrigin(PanelAnimation::Origin origin);
 	void showAnimated(PanelAnimation::Origin origin);

@@ -336,6 +336,7 @@ public:
 	void setColorOverride(std::optional<QColor> textColorOverride);
 	void setPaddingOverride(style::margins padding);
 	void setAllowTextLines(int lines = 0);
+	void setRoundCorners(int radius, bool top, bool bottom, bool separator);
 
 	[[nodiscard]] const style::SettingsButton &st() const;
 	[[nodiscard]] int fullTextWidth() const;
@@ -361,6 +362,10 @@ private:
 	[[nodiscard]] QRect toggleRect() const;
 	[[nodiscard]] int textAvailableWidth(int outerw) const;
 
+	int _cornerRadius = 0;
+	bool _roundTop = false;
+	bool _roundBottom = false;
+	bool _rowSeparator = false;
 	const style::SettingsButton &_st;
 	style::margins _padding;
 	Ui::Text::String _text;

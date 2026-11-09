@@ -16,6 +16,8 @@ class Painter;
 
 namespace Ui {
 
+void SetMacosSwitches(bool enabled);
+
 class AbstractCheckView {
 public:
 	AbstractCheckView(int duration, bool checked, Fn<void()> updateCallback);

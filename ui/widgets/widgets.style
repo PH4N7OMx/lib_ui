@@ -239,6 +239,9 @@ MenuSeparator {
 }
 
 Menu {
+	itemRadius: pixels;
+	itemInset: pixels;
+	frosted: bool;
 	skip: pixels;
 
 	itemBg: color;
@@ -960,6 +963,9 @@ defaultMenuSeparator: MenuSeparator {
 	fg: menuSeparatorFg;
 }
 defaultMenu: Menu {
+	itemRadius: 0px;
+	itemInset: 0px;
+	frosted: false;
 	skip: 0px;
 
 	itemBg: windowBg;

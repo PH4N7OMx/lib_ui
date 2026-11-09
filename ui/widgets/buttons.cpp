@@ -6,6 +6,8 @@
 //
 #include "ui/widgets/buttons.h"
 
+#include <QtGui/QPainterPath>
+
 #include "ui/effects/ripple_animation.h"
 #include "ui/effects/cross_animation.h"
 #include "ui/effects/numbers_animation.h"
@@ -989,8 +991,28 @@ int SettingsButton::fullTextWidth() const {
 	return _text.maxWidth();
 }
 
+void SettingsButton::setRoundCorners(int radius, bool top, bool bottom, bool separator) {
+	if (_cornerRadius == radius && _roundTop == top
+		&& _roundBottom == bottom && _rowSeparator == separator) return;
+	_cornerRadius = radius;
+	_roundTop = top;
+	_roundBottom = bottom;
+	_rowSeparator = separator;
+	setAttribute(Qt::WA_OpaquePaintEvent, radius == 0);
+	update();
+}
+
 void SettingsButton::paintEvent(QPaintEvent *e) {
 	Painter p(this);
+	if (_cornerRadius > 0) {
+		p.setRenderHint(QPainter::Antialiasing);
+		auto path = QPainterPath();
+		path.setFillRule(Qt::WindingFill);
+		path.addRoundedRect(QRectF(rect()), _cornerRadius, _cornerRadius);
+		if (!_roundTop) path.addRect(QRectF(0, 0, width(), height() / 2.));
+		if (!_roundBottom) path.addRect(QRectF(0, height() / 2., width(), height() / 2.));
+		p.setClipPath(path.simplified());
+	}
 
 	const auto paintOver = (isOver() || isDown()) && !isDisabled();
 	paintBg(p, e->rect(), paintOver);
@@ -1002,6 +1024,10 @@ void SettingsButton::paintEvent(QPaintEvent *e) {
 
 	if (_toggle) {
 		paintToggle(p, outerw);
+	}
+	if (_rowSeparator) {
+		p.fillRect(_padding.left(), height() - st::lineWidth,
+			std::max(0, width() - _padding.left()), st::lineWidth, st::menuSeparatorFg);
 	}
 }
 

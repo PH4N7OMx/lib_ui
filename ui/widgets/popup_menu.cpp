@@ -28,6 +28,7 @@
 #include <QtGui/QPainter>
 #include <QtGui/QScreen>
 #include <QtGui/QWindow>
+#include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
 
 #ifndef DESKTOP_APP_DISABLE_PRIVATE_QT_API
@@ -421,7 +422,36 @@ void PopupMenu::paintEvent(QPaintEvent *e) {
 	}
 }
 
+void PopupMenu::prepareBackdrop() {
+	if (!_st.menu.frosted) return;
+	SendPendingMoveResizeEvents(this);
+	auto root = parentWidget();
+	while (root && root->window()->windowType() == Qt::Popup) root = root->window()->parentWidget();
+	if (!root || size().isEmpty()) return;
+	root = root->window();
+	const auto ratio = devicePixelRatioF();
+	auto image = QImage(size() * ratio, QImage::Format_ARGB32_Premultiplied);
+	image.setDevicePixelRatio(ratio);
+	image.fill(_st.menu.itemBg->c);
+	const auto origin = root->mapFromGlobal(mapToGlobal(QPoint()));
+	const auto source = QRect(origin, size()).intersected(root->rect());
+	if (!source.isEmpty()) {
+		auto painter = QPainter(&image);
+		painter.drawPixmap(source.topLeft() - origin, root->grab(source));
+	}
+	image = Images::BlurLargeImage(std::move(image), std::max(1, int(18 * ratio)));
+	image.setDevicePixelRatio(ratio);
+	{
+		auto painter = QPainter(&image);
+		auto tint = _st.menu.itemBg->c;
+		tint.setAlphaF(0.7);
+		painter.fillRect(QRect(QPoint(), size()), tint);
+	}
+	setProperty(Menu::kBackdropProperty, QPixmap::fromImage(std::move(image)));
+}
+
 void PopupMenu::paintBg(QPainter &p) {
+	if (_st.menu.frosted) Menu::PaintBackground(p, this, _inner, _st.menu);
 	if (!_useTransparency) {
 		p.fillRect(0, 0, width() - _padding.right(), _padding.top(), _st.shadowFallback);
 		p.fillRect(width() - _padding.right(), 0, _padding.right(), height() - _padding.bottom(), _st.shadowFallback);
@@ -910,6 +940,7 @@ void PopupMenu::prepareShowAnimation() {
 }
 
 void PopupMenu::startShowAnimation() {
+	if (!_a_show.animating()) prepareBackdrop();
 	if (!_useTransparency) {
 		_a_show.stop();
 		update();
@@ -963,7 +994,7 @@ QImage PopupMenu::grabForPanelAnimation() {
 	{
 		QPainter p(&result);
 		_grabbingForPanelAnimation = true;
-		p.fillRect(_inner, _st.menu.itemBg);
+		Menu::PaintBackground(p, this, _inner, _st.menu);
 		for (const auto child : children()) {
 			if (const auto widget = qobject_cast<QWidget*>(child)) {
 				// Submenus are windows of their own, they are not a part
@@ -1269,10 +1300,10 @@ void PopupMenu::setupMenuWidget() {
 			_st.scrollPadding.bottom()));
 		auto p = QPainter(paddingWrap);
 		if (!top.isEmpty()) {
-			p.fillRect(top, _st.menu.itemBg);
+			Menu::PaintBackground(p, paddingWrap, top, _st.menu);
 		}
 		if (!bottom.isEmpty()) {
-			p.fillRect(bottom, _st.menu.itemBg);
+			Menu::PaintBackground(p, paddingWrap, bottom, _st.menu);
 		}
 	}, paddingWrap->lifetime());
 

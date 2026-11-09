@@ -24,6 +24,27 @@
 
 namespace Ui {
 namespace Platform {
+namespace {
+
+std::unique_ptr<TitleLayout> CustomTitleLayout;
+Fn<std::unique_ptr<AbstractTitleButtons>()> CustomTitleButtons;
+
+class FixedTitleControlsLayout final : public TitleControlsLayout {
+public:
+	explicit FixedTitleControlsLayout(TitleLayout layout)
+	: TitleControlsLayout(std::move(layout)) {
+	}
+};
+
+} // namespace
+
+void SetTitleControlsOverride(
+		TitleLayout layout,
+		Fn<std::unique_ptr<AbstractTitleButtons>()> factory) {
+	CustomTitleLayout = std::make_unique<TitleLayout>(std::move(layout));
+	CustomTitleButtons = std::move(factory);
+}
+
 
 bool SemiNativeSystemButtonProcessing() {
 	return ::Platform::IsWindows11OrGreater();
@@ -131,7 +152,9 @@ TitleControls::TitleControls(
 : TitleControls(
 	parent,
 	st,
-	std::make_unique<IconTitleButtons>(),
+	CustomTitleButtons
+		? CustomTitleButtons()
+		: std::make_unique<IconTitleButtons>(),
 	std::move(maximize)) {
 }
 
@@ -422,7 +445,9 @@ std::shared_ptr<TitleControlsLayout> TitleControlsLayout::Instance() {
 	static std::weak_ptr<TitleControlsLayout> Weak;
 	auto result = Weak.lock();
 	if (!result) {
-		Weak = result = Create();
+		Weak = result = CustomTitleLayout
+			? std::make_shared<FixedTitleControlsLayout>(*CustomTitleLayout)
+			: Create();
 	}
 	return result;
 }

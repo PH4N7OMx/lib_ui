@@ -15,11 +15,25 @@
 
 #include <QtGui/QtEvents>
 #include <QtCore/QtMath>
+#include <cmath>
+#include <algorithm>
 
 #include "jel/jel_ui_settings.h"
 
 namespace Ui {
 namespace {
+
+bool MacosSwitches = false;
+
+float64 MacosSwitchSpring(float64 delta, float64 progress) {
+	// CASpringAnimation response/damping from TGUIKit/SwitchView.swift.
+	constexpr auto frequency = 2. * 3.14159265358979323846 / 0.47;
+	constexpr auto rate = 0.7 * frequency;
+	const auto damped = frequency * std::sqrt(1. - 0.7 * 0.7);
+	const auto time = progress * 0.9879858824571184;
+	return delta * (1. - std::exp(-rate * time)
+		* (std::cos(damped * time) + rate / damped * std::sin(damped * time)));
+}
 
 int SwitchShift(not_null<const style::Toggle *> st) {
 	return JelUiSettings::isMaterialSwitches() ? st->shift : st::defaultToggleShift;
@@ -38,6 +52,8 @@ int SwitchDiameter(not_null<const style::Radio *> st) {
 }
 
 } // namespace
+
+void SetMacosSwitches(bool enabled) { MacosSwitches = enabled; }
 
 AbstractCheckView::AbstractCheckView(int duration, bool checked, Fn<void()> updateCallback)
 : _duration(duration)
@@ -58,8 +74,8 @@ void AbstractCheckView::setChecked(bool checked, anim::type animated) {
 			[=] { if (_updateCallback) _updateCallback(); },
 			_checked ? 0. : 1.,
 			_checked ? 1. : 0.,
-			JelUiSettings::isMaterialSwitches() ? _duration : st::defaultToggleDuration,
-			JelUiSettings::isMaterialSwitches() ? anim::easeOutCubic : anim::linear);
+			MacosSwitches ? 988 : JelUiSettings::isMaterialSwitches() ? _duration : st::defaultToggleDuration,
+			MacosSwitches ? anim::transition(MacosSwitchSpring) : JelUiSettings::isMaterialSwitches() ? anim::easeOutCubic : anim::linear);
 	}
 	checkedChangedHook(animated);
 	if (changed) {
@@ -98,6 +114,7 @@ ToggleView::ToggleView(
 }
 
 QSize ToggleView::getSize() const {
+	if (MacosSwitches) return QSize(style::ConvertScale(36), style::ConvertScale(20));
 	return QSize(2 * _st->border + SwitchDiameter(_st) + _st->width, 2 * _st->border + SwitchDiameter(_st));
 }
 
@@ -106,6 +123,36 @@ void ToggleView::setStyle(const style::Toggle &st) {
 }
 
 void ToggleView::paint(QPainter &p, int left, int top, int outerWidth) {
+	if (MacosSwitches) {
+		const auto size = getSize();
+		const auto scale = size.width() / 36.;
+		const auto value = currentAnimationValue();
+		const auto position = std::clamp(value, 0., 1.);
+		const auto track = style::rtlrect(QRectF(left, top + 2. * scale,
+			size.width(), 16. * scale), outerWidth);
+		const auto thumb = style::rtlrect(QRectF(left + (1.5 + 13. * value) * scale,
+			top + 3.5 * scale, 20. * scale, 13. * scale), outerWidth);
+		auto hq = PainterHighQualityEnabler(p);
+		const auto dark = st::windowBg->c.lightness() < 128;
+		const auto off = dark ? QColor(0x46, 0x48, 0x50) : QColor(0xe4, 0xe4, 0xe4);
+		const auto on = _st->toggledFg->c;
+		const auto color = QColor::fromRgbF(
+			off.redF() + (on.redF() - off.redF()) * position,
+			off.greenF() + (on.greenF() - off.greenF()) * position,
+			off.blueF() + (on.blueF() - off.blueF()) * position);
+		p.setPen(Qt::NoPen);
+		p.setBrush(color);
+		p.drawRoundedRect(track, 8. * scale, 8. * scale);
+		p.setBrush(QColor(0, 0, 0, 30));
+		p.drawRoundedRect(thumb.translated(0., 0.5 * scale), 6.5 * scale, 6.5 * scale);
+		p.setBrush(Qt::white);
+		p.drawRoundedRect(thumb, 6.5 * scale, 6.5 * scale);
+		if (_locked) {
+			_st->lockIcon.paint(p, left + (size.width() - _st->lockIcon.width()) / 2,
+				top + (size.height() - _st->lockIcon.height()) / 2, outerWidth, color.darker(160));
+		}
+		return;
+	}
 	left += _st->border;
 	top += _st->border;
 
