@@ -223,19 +223,19 @@ RpWidget *WindowHelper::titleWidget() {
 QMargins WindowHelper::frameMargins() {
 	return _title->isHidden()
 		? BasicWindowHelper::nativeFrameMargins()
-		: QMargins{ 0, _title->height(), 0, 0 };
+		: QMargins{ 0, titleHeight(), 0, 0 };
 }
 
 int WindowHelper::additionalContentPadding() const {
-	return _title->isHidden() ? 0 : _title->additionalPadding();
+	return (_title->isHidden() || _title->st()->controlsOverlayWidth) ? 0 : _title->additionalPadding();
 }
 
 rpl::producer<int> WindowHelper::additionalContentPaddingValue() const {
 	return rpl::combine(
 		_title->shownValue(),
 		_title->additionalPaddingValue()
-	) | rpl::map([](bool shown, int padding) {
-		return shown ? padding : 0;
+	) | rpl::map([=](bool shown, int padding) {
+		return shown && !_title->st()->controlsOverlayWidth ? padding : 0;
 	}) | rpl::distinct_until_changed();
 }
 
@@ -406,11 +406,8 @@ void WindowHelper::init() {
 			QSize size,
 			int titleHeight,
 			bool titleShown) {
-		_body->setGeometry(
-			0,
-			titleShown ? titleHeight : 0,
-			size.width(),
-			size.height() - (titleShown ? titleHeight : 0));
+		const auto reserved = titleShown && !_title->st()->controlsOverlayWidth ? titleHeight : 0;
+		_body->setGeometry(0, reserved, size.width(), size.height() - reserved);
 	}, _body->lifetime());
 
 	_dpi.value() | rpl::on_next([=](uint dpi) {
@@ -839,7 +836,7 @@ HitTestResult WindowHelper::systemButtonHitTest(int result) const {
 }
 
 int WindowHelper::titleHeight() const {
-	return _title->isHidden() ? 0 : _title->height();
+	return (_title->isHidden() || _title->st()->controlsOverlayWidth) ? 0 : _title->height();
 }
 
 bool WindowHelper::nativeResize() const {

@@ -367,7 +367,9 @@ void DefaultWindowHelper::init() {
 		_title->setGeometry(
 			area.left(),
 			area.top(),
-			width - area.left() - area.right(),
+			_title->st()->controlsOverlayWidth
+				? std::min(width - area.left() - area.right(), _title->st()->controlsOverlayWidth)
+				: width - area.left() - area.right(),
 			_title->controlsGeometry().height()
 				? _title->st()->height
 				: 0);
@@ -387,15 +389,17 @@ void DefaultWindowHelper::init() {
 			TitleControls::Layout controlsLayout) {
 		const auto area = resizeArea();
 
+		const auto reserved = titleShown && !_title->st()->controlsOverlayWidth ? titleHeight : 0;
 		const auto sizeWithoutMargins = size
-			.shrunkBy({ 0, titleShown ? titleHeight : 0, 0, 0 })
+			.shrunkBy({ 0, reserved, 0, 0 })
 			.shrunkBy(area);
 
 		const auto topLeft = QPoint(
 			area.left(),
-			area.top() + (titleShown ? titleHeight : 0));
+			area.top() + reserved);
 
 		_body->setGeometry(QRect(topLeft, sizeWithoutMargins));
+		if (_title->st()->controlsOverlayWidth) _title->raise();
 		updateRoundingOverlay();
 	}, _body->lifetime());
 
@@ -510,7 +514,7 @@ RpWidget *DefaultWindowHelper::titleWidget() {
 QMargins DefaultWindowHelper::frameMargins() {
 	return _title->isHidden()
 		? BasicWindowHelper::nativeFrameMargins()
-		: QMargins{ 0, _title->height(), 0, 0 };
+		: QMargins{ 0, titleHeight(), 0, 0 };
 }
 
 bool DefaultWindowHelper::hasShadow() const {
@@ -594,8 +598,11 @@ void DefaultWindowHelper::setTitleStyle(const style::WindowTitle &st) {
 	_title->setGeometry(
 		area.left(),
 		area.top(),
-		window()->width() - area.left() - area.right(),
+		st.controlsOverlayWidth
+			? std::min(window()->width() - area.left() - area.right(), st.controlsOverlayWidth)
+			: window()->width() - area.left() - area.right(),
 		_title->st()->height);
+	if (st.controlsOverlayWidth) _title->raise();
 }
 
 void DefaultWindowHelper::setNativeFrame(bool enabled) {
@@ -676,7 +683,7 @@ void DefaultWindowHelper::updateWindowMargins() {
 }
 
 int DefaultWindowHelper::titleHeight() const {
-	return _title->isHidden() ? 0 : _title->height();
+	return (_title->isHidden() || _title->st()->controlsOverlayWidth) ? 0 : _title->height();
 }
 
 QMargins DefaultWindowHelper::bodyPadding() const {
