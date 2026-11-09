@@ -1164,6 +1164,10 @@ defaultMultiSelect: MultiSelect {
 widgetFadeDuration: 200;
 
 SettingsSlider {
+	pill: bool;
+	pillInset: pixels;
+	pillBg: color;
+	pillActiveBg: color;
 	padding: pixels;
 	height: pixels;
 	barTop: pixels;
@@ -1186,6 +1190,10 @@ SettingsSlider {
 }
 
 defaultSettingsSlider: SettingsSlider {
+	pill: false;
+	pillInset: 3px;
+	pillBg: windowBg;
+	pillActiveBg: windowBgOver;
 	padding: 0px;
 	height: 39px;
 	barTop: 5px;

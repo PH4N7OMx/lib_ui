@@ -310,11 +310,38 @@ void CheckView::setStyle(const style::Check &st) {
 }
 
 void CheckView::paint(QPainter &p, int left, int top, int outerWidth) {
+	const auto native = MacosSwitches && _st->diameter == style::ConvertScale(14);
+	const auto thickness = native ? 1.5 * style::ConvertScale(100) / 100. : double(_st->thickness);
+	const auto radius = native ? double(style::ConvertScale(2)) : st::roundRadiusSmall - thickness / 2.;
 	auto toggled = currentAnimationValue();
+	if (native) {
+		auto hq = PainterHighQualityEnabler(p);
+		const auto rect = style::rtlrect(QRectF(left, top, _st->diameter, _st->diameter), outerWidth);
+		auto pen = _untoggledOverride ? QPen(*_untoggledOverride) : _st->untoggledFg->p;
+		pen.setWidthF(thickness);
+		p.setPen(pen);
+		p.setBrush(_st->bg);
+		p.drawRoundedRect(rect.marginsRemoved(QMarginsF(thickness / 2., thickness / 2.,
+			thickness / 2., thickness / 2.)), radius, radius);
+		if (toggled > 0.) {
+			p.save();
+			p.setOpacity(p.opacity() * toggled);
+			const auto scale = 0.2 + 0.8 * toggled;
+			p.translate(rect.center());
+			p.scale(scale, scale);
+			p.translate(-rect.center());
+			p.setPen(Qt::NoPen);
+			p.setBrush(_st->toggledFg);
+			p.drawRoundedRect(rect, radius, radius);
+			_st->icon.paintInCenter(p, rect);
+			p.restore();
+		}
+		return;
+	}
 	auto pen = _untoggledOverride
 		? anim::pen(*_untoggledOverride, _st->toggledFg, toggled)
 		: anim::pen(_st->untoggledFg, _st->toggledFg, toggled);
-	pen.setWidth(_st->thickness);
+	pen.setWidthF(thickness);
 	p.setPen(pen);
 	p.setBrush(anim::brush(
 		_st->bg,
@@ -325,7 +352,7 @@ void CheckView::paint(QPainter &p, int left, int top, int outerWidth) {
 
 	{
 		PainterHighQualityEnabler hq(p);
-		p.drawRoundedRect(style::rtlrect(QRectF(left, top, _st->diameter, _st->diameter).marginsRemoved(QMarginsF(_st->thickness / 2., _st->thickness / 2., _st->thickness / 2., _st->thickness / 2.)), outerWidth), st::roundRadiusSmall - (_st->thickness / 2.), st::roundRadiusSmall - (_st->thickness / 2.));
+		p.drawRoundedRect(style::rtlrect(QRectF(left, top, _st->diameter, _st->diameter).marginsRemoved(QMarginsF(thickness / 2., thickness / 2., thickness / 2., thickness / 2.)), outerWidth), radius, radius);
 	}
 
 	if (toggled > 0) {
