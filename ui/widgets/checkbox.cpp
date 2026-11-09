@@ -71,12 +71,14 @@ void AbstractCheckView::setChecked(bool checked, anim::type animated) {
 		}
 	} else if (changed) {
 		const auto macos = MacosSwitches && isToggle();
+		const auto nativeCheck = MacosSwitches && isNativeCheck();
+		const auto styled = nativeCheck || JelUiSettings::isMaterialSwitches();
 		_toggleAnimation.start(
 			[=] { if (_updateCallback) _updateCallback(); },
 			_checked ? 0. : 1.,
 			_checked ? 1. : 0.,
-			macos ? 988 : JelUiSettings::isMaterialSwitches() ? _duration : st::defaultToggleDuration,
-			macos ? anim::transition(MacosSwitchSpring) : JelUiSettings::isMaterialSwitches() ? anim::easeOutCubic : anim::linear);
+			macos ? 988 : styled ? _duration : st::defaultToggleDuration,
+			macos ? anim::transition(MacosSwitchSpring) : styled ? anim::easeOutCubic : anim::linear);
 	}
 	checkedChangedHook(animated);
 	if (changed) {
@@ -309,8 +311,12 @@ void CheckView::setStyle(const style::Check &st) {
 	_st = &st;
 }
 
+bool CheckView::isNativeCheck() const {
+	return _st->diameter == style::ConvertScale(14);
+}
+
 void CheckView::paint(QPainter &p, int left, int top, int outerWidth) {
-	const auto native = MacosSwitches && _st->diameter == style::ConvertScale(14);
+	const auto native = MacosSwitches && isNativeCheck();
 	const auto thickness = native ? 1.5 * style::ConvertScale(100) / 100. : double(_st->thickness);
 	const auto radius = native ? double(style::ConvertScale(2)) : st::roundRadiusSmall - thickness / 2.;
 	auto toggled = currentAnimationValue();

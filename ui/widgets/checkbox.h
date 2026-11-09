@@ -49,6 +49,7 @@ public:
 
 private:
 	virtual bool isToggle() const { return false; }
+	virtual bool isNativeCheck() const { return false; }
 	virtual void checkedChangedHook(anim::type animated) {
 	}
 
@@ -83,6 +84,7 @@ public:
 		rpl::lifetime &lifetime);
 
 private:
+	bool isNativeCheck() const override;
 	QSize rippleSize() const;
 
 	not_null<const style::Check*> _st;
