@@ -37,6 +37,9 @@ struct InputField;
 
 namespace Ui {
 
+void SetInputFieldStyleOverride(
+	Fn<std::unique_ptr<style::InputField>(const style::InputField&)> factory);
+
 const auto kClearFormatSequence = QKeySequence("ctrl+shift+n");
 const auto kStrikeOutSequence = QKeySequence("ctrl+shift+x");
 const auto kBlockquoteSequence = QKeySequence("ctrl+shift+.");
@@ -623,6 +626,7 @@ private:
 		TextRange range);
 	void trippleEnterExitBlock(QTextCursor &cursor);
 
+	const std::unique_ptr<style::InputField> _styleOverride;
 	const style::InputField &_st;
 	std::optional<style::color> _placeholderFgOverride;
 	Fn<not_null<Ui::Text::QuotePaintCache*>()> _preCache;
