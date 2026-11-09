@@ -23,6 +23,8 @@ extern const style::SettingsButton &defaultSettingsButton;
 
 namespace Ui {
 
+void SetMacosRoundButtons(bool enabled);
+
 class RippleAnimation;
 class NumbersAnimation;
 class ToggleView;

@@ -24,6 +24,8 @@
 namespace Ui {
 namespace {
 
+bool MacosRoundButtons = false;
+
 class SimpleRippleButton : public RippleButton {
 public:
 	using RippleButton::RippleButton;
@@ -298,6 +300,10 @@ void FlatButton::setTextMargins(QMargins margins) {
 	update();
 }
 
+void SetMacosRoundButtons(bool enabled) {
+	MacosRoundButtons = enabled;
+}
+
 RoundButton::RoundButton(
 	QWidget *parent,
 	rpl::producer<QString> text,
@@ -307,7 +313,8 @@ RoundButton::RoundButton(
 , _st(st)
 , _roundRect(st.radius ? st.radius : st::buttonRadius, _st.textBg)
 , _roundRectOver(st.radius ? st.radius : st::buttonRadius, _st.textBgOver)
-, _fullRadius(st.fullRadius) {
+, _fullRadius(st.fullRadius || (MacosRoundButtons
+	&& st.height >= style::ConvertScale(28) && st.radius <= st::buttonRadius)) {
 	_textFull.value(
 	) | rpl::on_next([=](const TextWithEntities &text) {
 		accessibilityNameChanged();
