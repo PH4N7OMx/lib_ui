@@ -6,6 +6,8 @@
 //
 #include "ui/widgets/menu/menu_common.h"
 
+#include "styles/palette.h"
+
 #include <QAction>
 #include <QtCore/QVariant>
 #include <QtGui/QPainter>

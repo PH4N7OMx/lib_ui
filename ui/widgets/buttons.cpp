@@ -6,6 +6,8 @@
 //
 #include "ui/widgets/buttons.h"
 
+#include "styles/palette.h"
+
 #include <QtGui/QPainterPath>
 
 #include "ui/effects/ripple_animation.h"
