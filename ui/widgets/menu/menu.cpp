@@ -5,7 +5,6 @@
 // https://github.com/desktop-app/legal/blob/master/LEGAL
 //
 #include "ui/widgets/menu/menu.h"
-#include "ui/widgets/menu/menu_common.h"
 
 #include "ui/widgets/menu/menu_action.h"
 #include "ui/widgets/menu/menu_item_base.h"
@@ -55,8 +54,7 @@ void Menu::init() {
 
 	paintRequest(
 	) | rpl::on_next([=](const QRect &clip) {
-		auto p = QPainter(this);
-		PaintBackground(p, this, clip, _st);
+		QPainter(this).fillRect(clip, _st.itemBg);
 	}, lifetime());
 
 	positionValue(

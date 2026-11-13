@@ -81,10 +81,6 @@ base::flat_set<IconData*> iconData;
 		auto p = QPainter(&maskImage);
 		auto hq = PainterHighQualityEnabler(p);
 		svg.render(&p, QRectF(0, 0, width, height));
-		if (data.contains("data-desktop-alpha-mask=\"true\"")) {
-			p.setCompositionMode(QPainter::CompositionMode_SourceIn);
-			p.fillRect(QRect(0, 0, width, height), Qt::white);
-		}
 		return maskImage;
 	}
 

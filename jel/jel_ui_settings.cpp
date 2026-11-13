@@ -13,6 +13,7 @@ namespace JelUiSettings {
 QString monoFont;
 double wideMultiplier = 1.0;
 bool materialSwitches;
+bool roundedSwitches = false;
 int avatarCorners = kMaxAvatarCorners;
 
 void setMonoFont(QString newFont) {
@@ -45,6 +46,14 @@ void setMaterialSwitches(bool val) {
 
 bool isMaterialSwitches() {
 	return materialSwitches;
+}
+
+void setRoundedSwitches(bool val) {
+	roundedSwitches = val;
+}
+
+bool isRoundedSwitches() {
+	return roundedSwitches;
 }
 
 void setAvatarCorners(int val) {

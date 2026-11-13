@@ -239,9 +239,6 @@ MenuSeparator {
 }
 
 Menu {
-	itemRadius: pixels;
-	itemInset: pixels;
-	frosted: bool;
 	skip: pixels;
 
 	itemBg: color;
@@ -584,7 +581,6 @@ PassportScanRow {
 }
 
 WindowTitle {
-	controlsOverlayWidth: pixels;
 	height: pixels;
 	bg: color;
 	bgActive: color;
@@ -964,9 +960,6 @@ defaultMenuSeparator: MenuSeparator {
 	fg: menuSeparatorFg;
 }
 defaultMenu: Menu {
-	itemRadius: 0px;
-	itemInset: 0px;
-	frosted: false;
 	skip: 0px;
 
 	itemBg: windowBg;
@@ -1164,10 +1157,6 @@ defaultMultiSelect: MultiSelect {
 widgetFadeDuration: 200;
 
 SettingsSlider {
-	pill: bool;
-	pillInset: pixels;
-	pillBg: color;
-	pillActiveBg: color;
 	padding: pixels;
 	height: pixels;
 	barTop: pixels;
@@ -1190,10 +1179,6 @@ SettingsSlider {
 }
 
 defaultSettingsSlider: SettingsSlider {
-	pill: false;
-	pillInset: 3px;
-	pillBg: windowBg;
-	pillActiveBg: windowBgOver;
 	padding: 0px;
 	height: 39px;
 	barTop: 5px;
@@ -1599,7 +1584,6 @@ windowTitleButtonClose: IconButton(windowTitleButton) {
 
 windowTitleButtonSize: size(windowTitleButtonWidth, windowTitleHeight);
 defaultWindowTitle: WindowTitle {
-	controlsOverlayWidth: 0px;
 	height: windowTitleHeight;
 	bg: titleBg;
 	bgActive: titleBgActive;

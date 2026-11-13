@@ -107,12 +107,6 @@ public:
 	virtual ~AbstractTitleButtons() = default;
 };
 
-// Install before creating windows; the application applies this at startup.
-// Native macOS helpers can continue supplying their own AppKit buttons.
-void SetTitleControlsOverride(
-	TitleLayout layout,
-	Fn<std::unique_ptr<AbstractTitleButtons>()> factory);
-
 class IconTitleButtons final : public AbstractTitleButtons {
 public:
 	object_ptr<AbstractButton> create(

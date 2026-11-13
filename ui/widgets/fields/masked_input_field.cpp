@@ -149,41 +149,27 @@ void MaskedInputField::paintEvent(QPaintEvent *e) {
 	auto p = QPainter(this);
 
 	auto r = rect().intersected(e->rect());
-	const auto errorDegree = _a_error.value(_error ? 1. : 0.);
-	const auto focusedDegree = _a_focused.value(_focused ? 1. : 0.);
-	if (_st.borderRadius > 0) {
-		const auto divide = _st.borderDenominator ? _st.borderDenominator : 1;
-		const auto border = _st.border / double(divide);
-		const auto half = border / 2.;
-		auto pen = anim::pen(_st.borderFg, _st.borderFgActive, focusedDegree);
-		pen.setColor(anim::color(pen.color(), _st.borderFgError, errorDegree));
-		pen.setWidthF(border);
-		auto hq = PainterHighQualityEnabler(p);
-		p.setPen(border > 0 ? pen : QPen(Qt::NoPen));
-		p.setBrush(anim::brush(_st.textBg, _st.textBgActive, focusedDegree));
-		p.drawRoundedRect(QRectF(rect()).marginsRemoved(QMarginsF(half, half, half, half)),
-			std::max(0., _st.borderRadius - half), std::max(0., _st.borderRadius - half));
-	} else {
-		p.fillRect(r, _st.textBg);
-		if (_st.border) {
-			p.fillRect(0, height() - _st.border, width(), _st.border, _st.borderFg->b);
-		}
-		auto borderShownDegree = _a_borderShown.value(1.);
-		auto borderOpacity = _a_borderOpacity.value(_borderVisible ? 1. : 0.);
-		if (_st.borderActive && (borderOpacity > 0.)) {
-			auto borderStart = std::clamp(_borderAnimationStart, 0, width());
-			auto borderFrom
-				= int(base::SafeRound(borderStart * (1. - borderShownDegree)));
-			const auto borderRest = width() - borderStart;
-			const auto shownTo
-				= int(base::SafeRound(borderRest * borderShownDegree));
-			auto borderTo = borderStart + shownTo;
-			if (borderTo > borderFrom) {
-				auto borderFg = anim::brush(_st.borderFgActive, _st.borderFgError, errorDegree);
-				p.setOpacity(borderOpacity);
-				p.fillRect(borderFrom, height() - _st.borderActive, borderTo - borderFrom, _st.borderActive, borderFg);
-				p.setOpacity(1);
-			}
+	p.fillRect(r, _st.textBg);
+	if (_st.border) {
+		p.fillRect(0, height() - _st.border, width(), _st.border, _st.borderFg->b);
+	}
+	auto errorDegree = _a_error.value(_error ? 1. : 0.);
+	auto focusedDegree = _a_focused.value(_focused ? 1. : 0.);
+	auto borderShownDegree = _a_borderShown.value(1.);
+	auto borderOpacity = _a_borderOpacity.value(_borderVisible ? 1. : 0.);
+	if (_st.borderActive && (borderOpacity > 0.)) {
+		auto borderStart = std::clamp(_borderAnimationStart, 0, width());
+		auto borderFrom
+			= int(base::SafeRound(borderStart * (1. - borderShownDegree)));
+		const auto borderRest = width() - borderStart;
+		const auto shownTo
+			= int(base::SafeRound(borderRest * borderShownDegree));
+		auto borderTo = borderStart + shownTo;
+		if (borderTo > borderFrom) {
+			auto borderFg = anim::brush(_st.borderFgActive, _st.borderFgError, errorDegree);
+			p.setOpacity(borderOpacity);
+			p.fillRect(borderFrom, height() - _st.borderActive, borderTo - borderFrom, _st.borderActive, borderFg);
+			p.setOpacity(1);
 		}
 	}
 

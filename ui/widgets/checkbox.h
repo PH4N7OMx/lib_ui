@@ -16,8 +16,6 @@ class Painter;
 
 namespace Ui {
 
-void SetMacosSwitches(bool enabled);
-
 class AbstractCheckView {
 public:
 	AbstractCheckView(int duration, bool checked, Fn<void()> updateCallback);
@@ -48,8 +46,7 @@ public:
 	virtual ~AbstractCheckView() = default;
 
 private:
-	virtual bool isToggle() const { return false; }
-	virtual bool isNativeCheck() const { return false; }
+	virtual bool roundedStyle() const { return false; }
 	virtual void checkedChangedHook(anim::type animated) {
 	}
 
@@ -84,7 +81,6 @@ public:
 		rpl::lifetime &lifetime);
 
 private:
-	bool isNativeCheck() const override;
 	QSize rippleSize() const;
 
 	not_null<const style::Check*> _st;
@@ -157,14 +153,16 @@ public:
 	QImage prepareRippleMask() const override;
 	bool checkRippleStartPosition(QPoint position) const override;
 	void setLocked(bool locked);
+	void setRoundedStyle(bool rounded) { _roundedStyle = rounded; }
 
 private:
-	bool isToggle() const override { return true; }
+	bool roundedStyle() const override;
 	void paintXV(QPainter &p, int left, int top, int outerWidth, float64 toggled, const QBrush &brush);
 	QSize rippleSize() const;
 
 	not_null<const style::Toggle*> _st;
 	bool _locked = false;
+	std::optional<bool> _roundedStyle;
 
 };
 

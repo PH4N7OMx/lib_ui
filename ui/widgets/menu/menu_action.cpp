@@ -96,7 +96,12 @@ void Action::paintEvent(QPaintEvent *e) {
 }
 
 void Action::paintBackground(QPainter &p, bool selected) {
-	PaintBackground(p, this, QRect(0, 0, width(), _height), _st, selected);
+	if (selected && _st.itemBgOver->c.alpha() < 255) {
+		p.fillRect(0, 0, width(), _height, _st.itemBg);
+	}
+	p.fillRect(
+		QRect(0, 0, width(), _height),
+		selected ? _st.itemBgOver : _st.itemBg);
 }
 
 void Action::paintText(Painter &p) {

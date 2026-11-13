@@ -47,8 +47,6 @@
 namespace Ui {
 namespace {
 
-Fn<std::unique_ptr<style::InputField>(const style::InputField&)> InputFieldStyleOverride;
-
 constexpr auto kInstantReplaceRandomId = QTextFormat::UserProperty;
 constexpr auto kInstantReplaceWhatId = QTextFormat::UserProperty + 1;
 constexpr auto kInstantReplaceWithId = QTextFormat::UserProperty + 2;
@@ -1910,11 +1908,6 @@ bool MarkdownEnabledState::instantTagsEnabled() const {
 	return yes && yes->instantTags;
 }
 
-void SetInputFieldStyleOverride(
-		Fn<std::unique_ptr<style::InputField>(const style::InputField&)> factory) {
-	InputFieldStyleOverride = std::move(factory);
-}
-
 InputField::InputField(
 	QWidget *parent,
 	const style::InputField &st,
@@ -1949,11 +1942,10 @@ InputField::InputField(
 	rpl::producer<QString> placeholder,
 	const TextWithTags &value)
 : RpWidget(parent)
-, _styleOverride(InputFieldStyleOverride ? InputFieldStyleOverride(st) : nullptr)
-, _st(_styleOverride ? *_styleOverride : st)
+, _st(st)
 , _mode(mode)
-, _minHeight(_st.heightMin)
-, _maxHeight(_st.heightMax)
+, _minHeight(st.heightMin)
+, _maxHeight(st.heightMax)
 , _inner(std::make_unique<Inner>(this))
 , _lastTextWithTags(value)
 , _placeholderFull(std::move(placeholder))
@@ -2957,7 +2949,6 @@ void InputField::paintRoundSurrounding(
 	const auto border = _st.border / float64(divide);
 	const auto borderHalf = border / 2.;
 	auto pen = anim::pen(_st.borderFg, _st.borderFgActive, focusedDegree);
-	pen.setColor(anim::color(pen.color(), _st.borderFgError, errorDegree));
 	pen.setWidthF(border);
 	p.setPen(pen);
 	p.setBrush(anim::brush(_st.textBg, _st.textBgActive, focusedDegree));

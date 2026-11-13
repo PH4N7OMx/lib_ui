@@ -21,6 +21,9 @@ int getWideMultiplied(int width, double mult);
 void setMaterialSwitches(bool val);
 bool isMaterialSwitches();
 
+void setRoundedSwitches(bool val);
+bool isRoundedSwitches();
+
 void setAvatarCorners(int val);
 int getAvatarCorners();
 

@@ -26,10 +26,10 @@ Separator::Separator(
 	setEnabled(false);
 	fitToMenuWidth();
 	paintRequest(
-	) | rpl::on_next([=, menuStyle = &st] {
+	) | rpl::on_next([=] {
 		Painter p(this);
 
-		PaintBackground(p, this, QRect(0, 0, width(), _height), *menuStyle);
+		p.fillRect(0, 0, width(), _height, _bg);
 		p.fillRect(
 			_padding.left(),
 			_padding.top(),

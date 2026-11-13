@@ -115,11 +115,8 @@ void TitleWidget::updateShadowGeometry() {
 }
 
 void TitleWidget::refreshGeometryWithWidth(int width) {
-	const auto overlay = _controls.st()->controlsOverlayWidth;
-	const auto add = overlay ? 0 : additionalPadding();
-	if (overlay) width = std::min(width, overlay);
+	const auto add = additionalPadding();
 	setGeometry(0, 0, width, _controls.st()->height + add);
-	if (overlay) raise();
 	if (_paddingHelper) {
 		_paddingHelper->controlsParent.setGeometry(
 			0,

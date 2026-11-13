@@ -23,10 +23,7 @@
 namespace Ui {
 namespace {
 
-bool MacosSwitches = false;
-
-float64 MacosSwitchSpring(float64 delta, float64 progress) {
-	// CASpringAnimation response/damping from TGUIKit/SwitchView.swift.
+float64 RoundedSwitchSpring(float64 delta, float64 progress) {
 	constexpr auto frequency = 2. * 3.14159265358979323846 / 0.47;
 	constexpr auto rate = 0.7 * frequency;
 	const auto damped = frequency * std::sqrt(1. - 0.7 * 0.7);
@@ -53,8 +50,6 @@ int SwitchDiameter(not_null<const style::Radio *> st) {
 
 } // namespace
 
-void SetMacosSwitches(bool enabled) { MacosSwitches = enabled; }
-
 AbstractCheckView::AbstractCheckView(int duration, bool checked, Fn<void()> updateCallback)
 : _duration(duration)
 , _checked(checked)
@@ -70,15 +65,16 @@ void AbstractCheckView::setChecked(bool checked, anim::type animated) {
 			_updateCallback();
 		}
 	} else if (changed) {
-		const auto macos = MacosSwitches && isToggle();
-		const auto nativeCheck = MacosSwitches && isNativeCheck();
-		const auto styled = nativeCheck || JelUiSettings::isMaterialSwitches();
 		_toggleAnimation.start(
 			[=] { if (_updateCallback) _updateCallback(); },
 			_checked ? 0. : 1.,
 			_checked ? 1. : 0.,
-			macos ? 988 : styled ? _duration : st::defaultToggleDuration,
-			macos ? anim::transition(MacosSwitchSpring) : styled ? anim::easeOutCubic : anim::linear);
+			roundedStyle()
+				? 988
+				: JelUiSettings::isMaterialSwitches() ? _duration : st::defaultToggleDuration,
+			roundedStyle()
+				? anim::transition(RoundedSwitchSpring)
+				: JelUiSettings::isMaterialSwitches() ? anim::easeOutCubic : anim::linear);
 	}
 	checkedChangedHook(animated);
 	if (changed) {
@@ -117,17 +113,24 @@ ToggleView::ToggleView(
 }
 
 QSize ToggleView::getSize() const {
-	if (MacosSwitches) return QSize(style::ConvertScale(36), style::ConvertScale(20));
-	return QSize(2 * _st->border + SwitchDiameter(_st) + _st->width, 2 * _st->border + SwitchDiameter(_st));
+	return QSize(2 * _st->border + SwitchDiameter(_st) + _st->width,
+		2 * _st->border + SwitchDiameter(_st)).expandedTo(
+			QSize(style::ConvertScale(36), style::ConvertScale(20)));
 }
 
 void ToggleView::setStyle(const style::Toggle &st) {
 	_st = &st;
 }
 
+bool ToggleView::roundedStyle() const {
+	return _roundedStyle.value_or(JelUiSettings::isRoundedSwitches());
+}
+
 void ToggleView::paint(QPainter &p, int left, int top, int outerWidth) {
-	if (MacosSwitches) {
-		const auto size = getSize();
+	if (roundedStyle()) {
+		const auto size = QSize(style::ConvertScale(36), style::ConvertScale(20));
+		left += (getSize().width() - size.width()) / 2;
+		top += (getSize().height() - size.height()) / 2;
 		const auto scale = size.width() / 36.;
 		const auto value = currentAnimationValue();
 		const auto position = std::clamp(value, 0., 1.);
@@ -156,6 +159,7 @@ void ToggleView::paint(QPainter &p, int left, int top, int outerWidth) {
 		}
 		return;
 	}
+
 	left += _st->border;
 	top += _st->border;
 
@@ -311,43 +315,12 @@ void CheckView::setStyle(const style::Check &st) {
 	_st = &st;
 }
 
-bool CheckView::isNativeCheck() const {
-	return _st->diameter == style::ConvertScale(14);
-}
-
 void CheckView::paint(QPainter &p, int left, int top, int outerWidth) {
-	const auto native = MacosSwitches && isNativeCheck();
-	const auto thickness = native ? 1.5 * style::ConvertScale(100) / 100. : double(_st->thickness);
-	const auto radius = native ? double(style::ConvertScale(2)) : st::roundRadiusSmall - thickness / 2.;
 	auto toggled = currentAnimationValue();
-	if (native) {
-		auto hq = PainterHighQualityEnabler(p);
-		const auto rect = style::rtlrect(QRectF(left, top, _st->diameter, _st->diameter), outerWidth);
-		auto pen = _untoggledOverride ? QPen(*_untoggledOverride) : _st->untoggledFg->p;
-		pen.setWidthF(thickness);
-		p.setPen(pen);
-		p.setBrush(_st->bg);
-		p.drawRoundedRect(rect.marginsRemoved(QMarginsF(thickness / 2., thickness / 2.,
-			thickness / 2., thickness / 2.)), radius, radius);
-		if (toggled > 0.) {
-			p.save();
-			p.setOpacity(p.opacity() * toggled);
-			const auto scale = 0.2 + 0.8 * toggled;
-			p.translate(rect.center());
-			p.scale(scale, scale);
-			p.translate(-rect.center());
-			p.setPen(Qt::NoPen);
-			p.setBrush(_st->toggledFg);
-			p.drawRoundedRect(rect, radius, radius);
-			_st->icon.paintInCenter(p, rect);
-			p.restore();
-		}
-		return;
-	}
 	auto pen = _untoggledOverride
 		? anim::pen(*_untoggledOverride, _st->toggledFg, toggled)
 		: anim::pen(_st->untoggledFg, _st->toggledFg, toggled);
-	pen.setWidthF(thickness);
+	pen.setWidth(_st->thickness);
 	p.setPen(pen);
 	p.setBrush(anim::brush(
 		_st->bg,
@@ -358,7 +331,7 @@ void CheckView::paint(QPainter &p, int left, int top, int outerWidth) {
 
 	{
 		PainterHighQualityEnabler hq(p);
-		p.drawRoundedRect(style::rtlrect(QRectF(left, top, _st->diameter, _st->diameter).marginsRemoved(QMarginsF(thickness / 2., thickness / 2., thickness / 2., thickness / 2.)), outerWidth), radius, radius);
+		p.drawRoundedRect(style::rtlrect(QRectF(left, top, _st->diameter, _st->diameter).marginsRemoved(QMarginsF(_st->thickness / 2., _st->thickness / 2., _st->thickness / 2., _st->thickness / 2.)), outerWidth), st::roundRadiusSmall - (_st->thickness / 2.), st::roundRadiusSmall - (_st->thickness / 2.));
 	}
 
 	if (toggled > 0) {

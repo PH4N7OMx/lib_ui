@@ -696,5 +696,3 @@ rankUserFg: windowSubTextFg; // regular user badge text, gray
 dialogsMentionIconFg: #40a7e3 | dialogsVerifiedIconBg; // chat list mention icon
 dialogsReactionIconFg: #e05356 | attentionButtonFg; // chat list reaction icon
 dialogsPollIconFg: #997be1 | historyPeer5NameFg; // chat list poll icon
-
-macosTabsSelectionBg: #00000013; // Native profile media selection lens.

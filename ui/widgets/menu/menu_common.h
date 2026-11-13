@@ -6,15 +6,7 @@
 //
 #pragma once
 
-class QPainter;
-class QRect;
-namespace style { struct Menu; }
-
 namespace Ui::Menu {
-
-inline constexpr auto kBackdropProperty = "desktop-app-menu-backdrop";
-void PaintBackground(QPainter &p, not_null<QWidget*> widget,
-	const QRect &rect, const style::Menu &st, bool selected = false);
 
 enum class TriggeredSource {
 	Mouse,
